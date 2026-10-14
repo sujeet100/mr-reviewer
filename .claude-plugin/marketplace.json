@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "mr-reviewer",
+  "description": "An MR review charter for Claude, packaged as a Claude Code plugin",
+  "owner": {
+    "name": "Sujit Kamthe"
+  },
+  "plugins": [
+    {
+      "name": "mr-review",
+      "description": "Review your local code changes before the MR exists, against the same charter the mr-reviewer bot uses. Changed code is grouped into coherent review cards and packed into agent invocations by read budget. Read-only: reports to you and posts nothing.",
+      "source": "./plugins/mr-review",
+      "category": "development",
+      "version": "0.11.0"
+    }
+  ]
+}

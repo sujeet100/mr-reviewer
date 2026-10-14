@@ -1,0 +1,61 @@
+[tool.poetry]
+name = "mr-reviewer"
+version = "0.1.0"
+description = "Automated GitLab MR code review with Claude"
+authors = ["Sujit Kamthe"]
+readme = "README.md"
+license = "MIT"
+packages = [{include = "mr_reviewer"}]
+# The review charter and the reduce step both live in the plugin, not the package (see
+# mr_reviewer/prompts.py and mr_reviewer/reduce.py). In a built wheel these land at
+# <site-packages>/plugins/mr-review/..., which is exactly where charter_dir()'s and scripts_dir()'s
+# second candidate looks, so an installed copy resolves the same way a checkout does. The scripts
+# are not optional extras: without merge_findings.py an installed CLI has no reduce step at all.
+include = [
+    { path = "plugins/mr-review/charter/*.md", format = ["sdist", "wheel"] },
+    { path = "plugins/mr-review/scripts/*.py", format = ["sdist", "wheel"] },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+anthropic = "^0.18.0"
+requests = "^2.33.0"
+pyyaml = "^6.0"
+python-dotenv = "^1.2.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+mypy = "^1.0"
+types-requests = "^2.32"
+types-pyyaml = "^6.0"
+ruff = "^0.14"
+
+[tool.poetry.scripts]
+mr-reviewer = "mr_reviewer.main:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# Ruff is both the linter and the formatter here. `ruff format` is a drop-in for black at the
+# same line length, so keeping black as well would only give two tools one job and two chances to
+# disagree. Both run as blocking pre-commit hooks (see .pre-commit-config.yaml).
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/F is pycodestyle + pyflakes, I sorts imports, UP modernises syntax for the floor in
+# `target-version`, B is bugbear (mutable defaults, `raise` losing its cause, unstrict `zip`),
+# SIM and C4 catch the collapsible conditional and the comprehension written the long way.
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+# The formatter owns line width, so E501 only ever fires where it chose not to split — and here
+# that is almost always a long string: prompt text, a charter path, a user-facing message. Hand
+# wrapping those is a semantic edit on the exact strings this tool's behaviour depends on, for a
+# cosmetic gain, so width is enforced by `ruff format` rather than reported by the linter.
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

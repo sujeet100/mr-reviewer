@@ -1,0 +1,81 @@
+# MR Reviewer Configuration
+# Copy this file to config.yaml and update with your settings.
+#
+# Everything specific to your organisation lives in the `gitlab:` and `jira:` blocks and in
+# review.default_group / review.projects. Every value can also be set by an environment variable
+# (listed beside it), and an environment variable always wins over this file.
+
+gitlab:
+  # GitLab instance URL (base URL, not project URL)                      env: GITLAB_URL
+  # https://gitlab.com for hosted projects, or your self-managed host, e.g. https://gitlab.example.com
+  url: https://gitlab.com
+  # Personal Access Token with 'api' scope
+  # Can also be set via GITLAB_TOKEN or MR_REVIEW_BOT_TOKEN environment variable
+  token: ${GITLAB_TOKEN}
+
+anthropic:
+  # Anthropic API key
+  # Can also be set via ANTHROPIC_API_KEY environment variable
+  api_key: ${ANTHROPIC_API_KEY}
+  # Model to use for reviews. claude-opus-4-8 (latest, most capable) is recommended
+  # for review depth. Use claude-sonnet-4-6 for faster/cheaper reviews.
+  model: claude-opus-4-8
+
+review:
+  # Skip review if MR has more than this many files (likely major refactor)
+  max_files: 50
+  # Maximum diff lines to process (will truncate if exceeded)
+  max_diff_lines: 3000
+
+  # GitLab username whose assigned MRs should be reviewed.
+  # If empty, defaults to the token owner. Overridden by --reviewer.
+  reviewer_username: ""
+
+  # Project paths to scan for open MRs (ignores assignee unless reviewer_username is also set).
+  # Overridden by --projects on the CLI.
+  # Paths can be short (auto-prepended with default_group) or fully qualified.
+  # Example:
+  # projects:
+  #   - payments/checkout-service     # short — expanded to my-group/payments/checkout-service
+  #   - my-group/payments/ledger      # fully qualified — used as-is
+  projects: []
+
+  # Parent group auto-prepended to short project paths.
+  # Paths that already start with this prefix pass through unchanged.
+  # Set to "" to disable. Override with GITLAB_DEFAULT_GROUP env var.
+  default_group: ""
+
+  # Focus areas for review (all enabled by default)
+  checks:
+    - code_smells
+    - design_patterns
+    - potential_bugs
+    - complexity
+    - readability
+    - modern_constructs
+    - duplication
+
+# Language-specific settings
+java:
+  # Suggest constructs from this Java version and above
+  min_version: 17
+  # Frameworks to consider in review
+  frameworks:
+    - spring-boot
+
+angular:
+  # Enable strict TypeScript checking advice
+  typescript_strict: true
+
+# Jira story context, fetched through an Atlassian MCP connector in your Claude login.
+# Leave `site` empty to run without Jira; the PO and blind design passes then skip themselves.
+jira:
+  # Your Atlassian site (or cloud id)                                     env: JIRA_SITE / JIRA_CLOUD_ID
+  site: ""                           # e.g. your-company.atlassian.net
+  enabled: true                      #                                    env: JIRA_ENABLED
+  # Only these project keys count as ticket references, so "SHA-256" in a description is not
+  # mistaken for a story. Empty accepts any ABC-123 shape.            env: JIRA_PROJECT_KEYS=PAY,CORE
+  project_keys: []
+  # The MCP tool that fetches one issue. Connector names vary by account: a second Atlassian
+  # connection shows up as mcp__claude_ai_Atlassian_2__getJiraIssue.      env: JIRA_MCP_TOOL
+  mcp_tool: mcp__claude_ai_Atlassian__getJiraIssue

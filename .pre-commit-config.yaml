@@ -1,0 +1,46 @@
+# Hooks that gate a commit. Install them once per clone:
+#
+#     pre-commit install
+#
+# ruff and mypy run as `system` hooks against this project's .venv rather than through
+# pre-commit's own pinned mirrors, so the version that gates a commit is the version in
+# poetry.lock — one copy of each tool, the same one you get from `poetry run`. That means
+# `poetry install` has to have run before your first commit, which it has anyway for the tests.
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.17.0
+    hooks:
+      - id: gitleaks
+        args:
+          - protect
+          - --staged
+          - --redact
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: .venv/bin/ruff check --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        # Rewrites the file and fails, so a reformatted file is re-staged deliberately rather
+        # than folded into the commit behind your back.
+        entry: .venv/bin/ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: mypy
+        name: mypy
+        # The whole tree, not the staged files. mypy infers across modules, so checking a file in
+        # isolation both misses errors that live at the seam and invents ones about imports it
+        # cannot see. The run is a couple of seconds on 22 files.
+        entry: .venv/bin/mypy mr_reviewer plugins/mr-review/scripts tests
+        pass_filenames: false
+        language: system
+        types: [python]
+        require_serial: true

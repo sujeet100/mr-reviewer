@@ -1,0 +1,8 @@
+{
+  "name": "mr-review",
+  "description": "Review your local code changes before the MR exists, against the same charter the mr-reviewer bot uses. Changed code is grouped into coherent review cards and packed into agent invocations by read budget. Read-only: reports to you and posts nothing.",
+  "version": "0.11.0",
+  "author": {
+    "name": "Sujit Kamthe"
+  }
+}
